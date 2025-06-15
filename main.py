@@ -31,10 +31,9 @@ def main():
     print("   Admin: admin@example.com / admin123")
     print("   User1: john@example.com / password123")
     print("   User2: jane@example.com / mypassword")
-    print("🌐 Server läuft auf: http://localhost:5001")
+    print("🌐 Server läuft auf: http://localhost:5003")
     
-    app.run(debug=False, host='0.0.0.0', port=5001)
+    app.run(debug=False, host='0.0.0.0', port=5003)
 
 if __name__ == '__main__':
     main()
-

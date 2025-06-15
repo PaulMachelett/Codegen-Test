@@ -1,0 +1,37 @@
+🗄️ SQLAlchemy-Mock-Datenbank initialisiert
+📊 Simuliert echte SQLite-Datenbankoperationen
+🚀 Flask Web-Backend wird gestartet...
+📋 Verfügbare Dummy-Benutzer:
+   Admin: admin@example.com / admin123
+   User1: john@example.com / password123
+   User2: jane@example.com / mypassword
+🌐 Server läuft auf: http://localhost:5003
+ * Serving Flask app 'main'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://172.20.73.126:5003
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [15/Jun/2025 21:30:03] "GET /health HTTP/1.1" 200 -
+[DB] SELECT * FROM users WHERE email = 'admin@example.com' LIMIT 1
+[AUTH] User admin authenticated successfully
+[SESSION] Created session token for user 1
+127.0.0.1 - - [15/Jun/2025 21:30:11] "POST /login HTTP/1.1" 200 -
+[SESSION] Found valid session for user 1
+[DB] SELECT * FROM users WHERE id = 1
+[2025-06-15 21:30:18,743] ERROR in app: Exception on /notes/1 [GET]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/flask/app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.13/site-packages/flask/app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.13/site-packages/flask/app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.13/site-packages/flask/app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/tmp/PaulMachelett/Codegen-Test/myapp/utils.py", line 38, in decorated_function
+    return f(*args, **kwargs)
+TypeError: get_note() got an unexpected keyword argument 'note_i'. Did you mean 'note_id'?
+127.0.0.1 - - [15/Jun/2025 21:30:18] "[35m[1mGET /notes/1 HTTP/1.1[0m" 500 -

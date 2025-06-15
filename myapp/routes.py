@@ -102,8 +102,7 @@ def register():
     except Exception as e:
         return format_error_response('Fehler bei der Registrierung', 500)
 
-# Route de connexion renommée de /login à /userlogin
-@api.route('/userlogin', methods=['POST'])
+@api.route('/login', methods=['POST'])
 def login():
     """Benutzeranmeldung"""
     try:
@@ -197,7 +196,7 @@ def create_note():
     except Exception as e:
         return format_error_response('Fehler beim Erstellen der Notiz', 500)
 
-@api.route('/notes/<int:note_id>', methods=['GET'])
+@api.route('/notes/<int:note_i>', methods=['GET'])
 @require_auth
 def get_note(note_id):
     """Einzelne Notiz abrufen"""
