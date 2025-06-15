@@ -11,6 +11,16 @@ from .utils import (
 # Blueprint für API-Routen erstellen
 api = Blueprint('api', __name__)
 
+# Health Check Endpunkt
+@api.route('/health', methods=['GET'])
+def health_check():
+    """Gesundheitsstatus der API"""
+    return jsonify({
+        'status': 'healthy',
+        'message': 'Flask Backend läuft erfolgreich',
+        'version': '1.0.0'
+    }), 200
+
 # Fehlerbehandlung
 @api.errorhandler(404)
 def not_found(error):
@@ -21,7 +31,7 @@ def internal_error(error):
     return jsonify({'error': 'Interner Serverfehler'}), 500
 
 # Authentifizierungs-Endpunkte
-@api.route('/registe', methods=['POST'])
+@api.route('/register', methods=['POST'])
 def register():
     """Benutzerregistrierung"""
     try:
@@ -283,4 +293,3 @@ def get_current_user_info():
         
     except Exception as e:
         return format_error_response('Fehler beim Abrufen der Benutzerinformationen', 500)
-
