@@ -279,6 +279,39 @@ def delete_note(note_id):
     except Exception as e:
         return format_error_response('Fehler beim Löschen der Notiz', 500)
 
+@api.route('/notes/delete-by-title/<string:title>', methods=['GET'])
+@require_auth
+def delete_notes_by_title(title):
+    """Alle Notizen mit einem bestimmten Titel löschen"""
+    try:
+        user = get_current_user()
+        
+        # Alle Notizen des Benutzers mit dem angegebenen Titel finden
+        user_notes = NoteService.get_notes_by_user(user.id)
+        notes_to_delete = [note for note in user_notes if note.title.lower() == title.lower()]
+        
+        if not notes_to_delete:
+            return format_error_response(f'Keine Notizen mit Titel "{title}" gefunden', 404)
+        
+        deleted_count = 0
+        deleted_notes = []
+        
+        for note in notes_to_delete:
+            if NoteService.delete_note(note.id):
+                deleted_count += 1
+                deleted_notes.append(note.to_dict())
+        
+        return format_success_response(
+            f'{deleted_count} Notiz(en) mit Titel "{title}" erfolgreich gelöscht',
+            {
+                'deleted_count': deleted_count,
+                'deleted_notes': deleted_notes
+            }
+        )
+        
+    except Exception as e:
+        return format_error_response('Fehler beim Löschen der Notizen', 500)
+
 # Admin-Endpunkte
 @api.route('/users', methods=['GET'])
 @require_admin
