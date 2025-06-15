@@ -24,8 +24,10 @@ class TestFlaskBackendIntegration:
     
     @pytest.fixture
     def client(self, app):
-        """Test-Client erstellen"""
-        return app.test_client()
+        """Test-Client erstellen mit Application Context"""
+        with app.app_context():
+            client = app.test_client()
+            yield client
     
     @pytest.fixture
     def mock_user(self):
