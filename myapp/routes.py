@@ -21,6 +21,33 @@ def health_check():
         'version': '1.0.0'
     }), 200
 
+# E-Mail-Existenz-Prüfung
+@api.route('/check-email', methods=['GET'])
+def check_email_exists():
+    """Überprüft, ob eine E-Mail-Adresse bereits existiert"""
+    try:
+        email = request.args.get('email')
+        
+        if not email:
+            return jsonify(False), 200
+        
+        # E-Mail normalisieren (lowercase)
+        email = email.lower().strip()
+        
+        # E-Mail-Format validieren
+        if not validate_email(email):
+            return jsonify(False), 200
+        
+        # Prüfen, ob E-Mail bereits existiert
+        existing_user = UserService.get_user_by_email(email)
+        exists = existing_user is not None
+        
+        return jsonify(exists), 200
+        
+    except Exception as e:
+        # Bei Fehlern false zurückgeben (sicherer Fallback)
+        return jsonify(False), 200
+
 # Fehlerbehandlung
 @api.errorhandler(404)
 def not_found(error):
