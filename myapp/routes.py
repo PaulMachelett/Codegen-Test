@@ -21,7 +21,7 @@ def internal_error(error):
     return jsonify({'error': 'Interner Serverfehler'}), 500
 
 # Authentifizierungs-Endpunkte
-@api.route('/register', methods=['POST'])
+@api.route('/registe', methods=['POST'])
 def register():
     """Benutzerregistrierung"""
     try:
