@@ -72,12 +72,12 @@ class TestFlaskBackendIntegration:
         note.id = 1
         note.title = 'Test Note'
         note.content = 'Test content'
-        note.owner_id = 1
+        note.user_id = 1
         note.to_dict.return_value = {
             'id': 1,
             'title': 'Test Note',
             'content': 'Test content',
-            'owner_id': 1,
+            'user_id': 1,
             'created_at': '2024-01-01T00:00:00',
             'updated_at': '2024-01-01T00:00:00'
         }
@@ -176,7 +176,7 @@ class TestFlaskBackendIntegration:
         with patch.object(UserService, 'authenticate_user', return_value=mock_user), \
              patch.object(SessionService, 'create_session', return_value='test-token-123'):
             
-            response = client.post('/login', 
+            response = client.post('/userlogin', 
                 json={
                     'email': 'test@example.com',
                     'password': 'password123'
@@ -193,7 +193,7 @@ class TestFlaskBackendIntegration:
     def test_login_invalid_credentials(self, client):
         """Test: Login mit ungültigen Anmeldedaten"""
         with patch.object(UserService, 'authenticate_user', return_value=None):
-            response = client.post('/login', 
+            response = client.post('/userlogin', 
                 json={
                     'email': 'test@example.com',
                     'password': 'wrongpassword'
@@ -206,7 +206,7 @@ class TestFlaskBackendIntegration:
     
     def test_login_missing_fields(self, client):
         """Test: Login mit fehlenden Feldern"""
-        response = client.post('/login', 
+        response = client.post('/userlogin', 
             json={
                 'email': 'test@example.com'
                 # password fehlt
@@ -314,7 +314,7 @@ class TestFlaskBackendIntegration:
         """Test: Erfolgreicher Abruf aller eigenen Notizen"""
         notes = [mock_note]
         with patch.object(SessionService, 'get_user_from_session', return_value=mock_user), \
-             patch.object(NoteService, 'get_notes_by_owner', return_value=notes):
+             patch.object(NoteService, 'get_notes_by_user', return_value=notes):
             
             response = client.get('/notes', headers=auth_headers)
             
@@ -328,7 +328,7 @@ class TestFlaskBackendIntegration:
     def test_get_notes_empty(self, client, auth_headers, mock_user):
         """Test: Abruf von Notizen wenn keine vorhanden"""
         with patch.object(SessionService, 'get_user_from_session', return_value=mock_user), \
-             patch.object(NoteService, 'get_notes_by_owner', return_value=[]):
+             patch.object(NoteService, 'get_notes_by_user', return_value=[]):
             
             response = client.get('/notes', headers=auth_headers)
             
@@ -382,7 +382,7 @@ class TestFlaskBackendIntegration:
     
     def test_get_single_note_access_denied(self, client, auth_headers, mock_user, mock_note):
         """Test: Abruf einer fremden Notiz (Zugriff verweigert)"""
-        mock_note.owner_id = 999  # Andere User-ID
+        mock_note.user_id = 999  # Andere User-ID
         with patch.object(SessionService, 'get_user_from_session', return_value=mock_user), \
              patch.object(NoteService, 'get_note_by_id', return_value=mock_note):
             
@@ -401,7 +401,7 @@ class TestFlaskBackendIntegration:
             'id': 1,
             'title': 'Updated Note',
             'content': 'Updated content',
-            'owner_id': 1,
+            'user_id': 1,
             'created_at': '2024-01-01T00:00:00',
             'updated_at': '2024-01-01T01:00:00'
         }
@@ -482,7 +482,7 @@ class TestFlaskBackendIntegration:
         bearer_headers = {'Authorization': 'Bearer test-token-123'}
         
         with patch.object(SessionService, 'get_user_from_session', return_value=mock_user), \
-             patch.object(NoteService, 'get_notes_by_owner', return_value=[mock_note]):
+             patch.object(NoteService, 'get_notes_by_user', return_value=[mock_note]):
             
             response = client.get('/notes', headers=bearer_headers)
             
@@ -500,19 +500,19 @@ class TestFlaskBackendIntegration:
             note.id = i + 1
             note.title = f'Test Note {i + 1}'
             note.content = f'Test content {i + 1}'
-            note.owner_id = 1
+            note.user_id = 1
             note.to_dict.return_value = {
                 'id': i + 1,
                 'title': f'Test Note {i + 1}',
                 'content': f'Test content {i + 1}',
-                'owner_id': 1,
+                'user_id': 1,
                 'created_at': '2024-01-01T00:00:00',
                 'updated_at': '2024-01-01T00:00:00'
             }
             notes.append(note)
         
         with patch.object(SessionService, 'get_user_from_session', return_value=mock_user), \
-             patch.object(NoteService, 'get_notes_by_owner', return_value=notes):
+             patch.object(NoteService, 'get_notes_by_user', return_value=notes):
             
             response = client.get('/notes', headers=auth_headers)
             

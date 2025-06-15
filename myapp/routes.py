@@ -102,7 +102,8 @@ def register():
     except Exception as e:
         return format_error_response('Fehler bei der Registrierung', 500)
 
-@api.route('/login', methods=['POST'])
+# Route de connexion renommée de /login à /userlogin
+@api.route('/userlogin', methods=['POST'])
 def login():
     """Benutzeranmeldung"""
     try:
@@ -158,7 +159,8 @@ def get_notes():
     """Alle eigenen Notizen abrufen"""
     try:
         user = get_current_user()
-        notes = NoteService.get_notes_by_owner(user.id)
+        # Utilisation de la nouvelle méthode get_notes_by_user au lieu de get_notes_by_owner
+        notes = NoteService.get_notes_by_user(user.id)
         notes_data = [note.to_dict() for note in notes]
         return jsonify({'notes': notes_data}), 200
         
@@ -205,7 +207,8 @@ def get_note(note_id):
             return format_error_response('Notiz nicht gefunden', 404)
         
         user = get_current_user()
-        if note.owner_id != user.id:
+        # Vérification avec le nouveau attribut user_id au lieu d'owner_id
+        if note.user_id != user.id:
             return format_error_response('Zugriff verweigert', 403)
         
         return jsonify({'note': note.to_dict()}), 200
@@ -223,7 +226,8 @@ def update_note(note_id):
             return format_error_response('Notiz nicht gefunden', 404)
         
         user = get_current_user()
-        if note.owner_id != user.id:
+        # Vérification avec le nouveau attribut user_id au lieu d'owner_id
+        if note.user_id != user.id:
             return format_error_response('Zugriff verweigert', 403)
         
         data = request.get_json()
@@ -264,7 +268,8 @@ def delete_note(note_id):
             return format_error_response('Notiz nicht gefunden', 404)
         
         user = get_current_user()
-        if note.owner_id != user.id:
+        # Vérification avec le nouveau attribut user_id au lieu d'owner_id
+        if note.user_id != user.id:
             return format_error_response('Zugriff verweigert', 403)
         
         if NoteService.delete_note(note_id):

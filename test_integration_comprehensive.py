@@ -72,7 +72,7 @@ class TestFlaskBackendComprehensive:
         note.id = 1
         note.title = 'Test Note'
         note.content = 'Test content'
-        note.owner_id = 1
+        note.user_id = 1
         note.to_dict.return_value = {
             'id': 1,
             'title': 'Test Note',
@@ -214,7 +214,7 @@ class TestFlaskBackendComprehensive:
             with patch.object(UserService, 'authenticate_user', return_value=mock_user), \
                  patch.object(SessionService, 'create_session', return_value='test-token-123'):
                 
-                response = client.post('/login', 
+                response = client.post('/userlogin', 
                     json={
                         'email': email,
                         'password': 'password123'
@@ -235,7 +235,7 @@ class TestFlaskBackendComprehensive:
         mock_note.id = 1
         mock_note.title = 'Test Note'
         mock_note.content = 'Test content'
-        mock_note.owner_id = 1
+        mock_note.user_id = 1
         mock_note.to_dict.return_value = {
             'id': 1,
             'title': 'Test Note',
@@ -334,7 +334,7 @@ class TestFlaskBackendComprehensive:
             mock_note.id = i + 1
             mock_note.title = test_case['title']
             mock_note.content = test_case['content']
-            mock_note.owner_id = 1
+            mock_note.user_id = 1
             mock_note.to_dict.return_value = {
                 'id': i + 1,
                 'title': test_case['title'],
@@ -476,7 +476,7 @@ class TestFlaskBackendComprehensive:
             mock_note.id = i + 1
             mock_note.title = f'Concurrent Note {i + 1}'
             mock_note.content = f'Content {i + 1}'
-            mock_note.owner_id = 1
+            mock_note.user_id = 1
             mock_note.to_dict.return_value = {
                 'id': i + 1,
                 'title': f'Concurrent Note {i + 1}',
@@ -516,7 +516,7 @@ class TestFlaskBackendComprehensive:
         mock_note.id = 1
         mock_note.title = large_title
         mock_note.content = large_content
-        mock_note.owner_id = 1
+        mock_note.user_id = 1
         mock_note.to_dict.return_value = {
             'id': 1,
             'title': large_title,
@@ -566,7 +566,7 @@ class TestFlaskBackendComprehensive:
             mock_note.id = i + 1
             mock_note.title = malicious_input['title']
             mock_note.content = malicious_input['content']
-            mock_note.owner_id = 1
+            mock_note.user_id = 1
             mock_note.to_dict.return_value = {
                 'id': i + 1,
                 'title': malicious_input['title'],

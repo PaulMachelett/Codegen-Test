@@ -66,7 +66,8 @@ class UserService:
         User löschen (mit Cascade-Delete für Notes)
         Simuliert: db.session.delete(user) + db.session.commit()
         """
-        print(f"[DB] DELETE FROM notes WHERE owner_id = {user_id}")
+        # Suppression des notes avec le nouveau nom d'attribut user_id
+        print(f"[DB] DELETE FROM notes WHERE user_id = {user_id}")
         print(f"[DB] DELETE FROM users WHERE id = {user_id}")
         return mock_db.delete_user(user_id)
     
@@ -88,15 +89,16 @@ class NoteService:
     """Service-Klasse für Note-Operationen"""
     
     @staticmethod
-    def create_note(title, content, owner_id):
+    def create_note(title, content, user_id):
         """
-        Neue Notiz erstellen
+        Nouvelle note cré����e
         Simuliert: db.session.add(note) + db.session.commit()
         """
         try:
-            note = mock_db.create_note(title, content, owner_id)
+            # Utilisation du nouveau paramètre user_id au lieu d'owner_id
+            note = mock_db.create_note(title, content, user_id)
             if note:
-                print(f"[DB] INSERT INTO notes (title, content, owner_id) VALUES ('{title}', '{content[:30]}...', {owner_id})")
+                print(f"[DB] INSERT INTO notes (title, content, user_id) VALUES ('{title}', '{content[:30]}...', {user_id})")
                 return note
             return None
         except Exception as e:
@@ -113,13 +115,13 @@ class NoteService:
         return mock_db.get_note_by_id(note_id)
     
     @staticmethod
-    def get_notes_by_owner(owner_id):
+    def get_notes_by_user(user_id):
         """
-        Alle Notizen eines Benutzers
-        Simuliert: Note.query.filter_by(owner_id=owner_id).all()
+        Toutes les notes d'un utilisateur
+        Simuliert: Note.query.filter_by(user_id=user_id).all()
         """
-        print(f"[DB] SELECT * FROM notes WHERE owner_id = {owner_id}")
-        return mock_db.get_notes_by_owner(owner_id)
+        print(f"[DB] SELECT * FROM notes WHERE user_id = {user_id}")
+        return mock_db.get_notes_by_user(user_id)
     
     @staticmethod
     def update_note(note_id, title=None, content=None):
@@ -195,4 +197,3 @@ class SessionService:
         if session:
             return UserService.get_user_by_id(session['user_id'])
         return None
-

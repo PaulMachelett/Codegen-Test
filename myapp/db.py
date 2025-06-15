@@ -88,21 +88,22 @@ class MockDatabase:
         if not user:
             return False
         
-        # Cascade-Delete: Alle Notes des Users löschen
-        self.notes = [note for note in self.notes if note.owner_id != user_id]
+        # Cascade-Delete: Suppression de toutes les notes de l'utilisateur
+        self.notes = [note for note in self.notes if note.user_id != user_id]
         
         # User löschen
         self.users = [u for u in self.users if u.id != user_id]
         return True
     
     # Note CRUD-Operationen
-    def create_note(self, title, content, owner_id):
+    def create_note(self, title, content, user_id):
         """Simuliert Note.create() mit SQLAlchemy"""
-        # Prüfen ob Owner existiert (Foreign Key Constraint)
-        if not self.get_user_by_id(owner_id):
+        # Vérification si l'utilisateur existe (contrainte de clé étrangère)
+        if not self.get_user_by_id(user_id):
             return None
         
-        note = Note(title, content, owner_id)
+        # Création de la note avec le nouveau paramètre user_id
+        note = Note(title, content, user_id)
         note.id = self.note_id_counter
         self.note_id_counter += 1
         self.notes.append(note)
@@ -112,9 +113,10 @@ class MockDatabase:
         """Simuliert Note.query.get(id)"""
         return next((note for note in self.notes if note.id == note_id), None)
     
-    def get_notes_by_owner(self, owner_id):
-        """Simuliert Note.query.filter_by(owner_id=owner_id).all()"""
-        return [note for note in self.notes if note.owner_id == owner_id]
+    def get_notes_by_user(self, user_id):
+        """Simuliert Note.query.filter_by(user_id=user_id).all()"""
+        # Récupération des notes par user_id au lieu d'owner_id
+        return [note for note in self.notes if note.user_id == user_id]
     
     def update_note(self, note_id, title=None, content=None):
         """Simuliert Note.update() mit SQLAlchemy"""
@@ -172,4 +174,3 @@ def init_db(app):
     print("🗄️ SQLAlchemy-Mock-Datenbank initialisiert")
     print("📊 Simuliert echte SQLite-Datenbankoperationen")
     return db
-

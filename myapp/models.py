@@ -21,8 +21,8 @@ class User(db.Model):
     admin = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # Relationship zu Notes
-    notes = relationship('Note', backref='owner', lazy=True, cascade='all, delete-orphan')
+    # Relationship zu Notes - mise à jour pour utiliser user_id
+    notes = relationship('Note', backref='user', lazy=True, cascade='all, delete-orphan')
     
     def __init__(self, name, email, password, admin=False):
         self.name = name
@@ -57,14 +57,16 @@ class Note(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(200), nullable=False)
     content = Column(Text, nullable=False)
-    owner_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    # Changement: owner_id renommé en user_id pour une meilleure cohérence
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    def __init__(self, title, content, owner_id):
+    def __init__(self, title, content, user_id):
+        # Constructeur mis à jour pour utiliser user_id au lieu d'owner_id
         self.title = title
         self.content = content
-        self.owner_id = owner_id
+        self.user_id = user_id
     
     def to_dict(self):
         """Konvertiert Note zu Dictionary"""
@@ -72,7 +74,8 @@ class Note(db.Model):
             'id': self.id,
             'title': self.title,
             'content': self.content,
-            'owner_id': self.owner_id,
+            # Retour du nouveau nom d'attribut user_id
+            'user_id': self.user_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

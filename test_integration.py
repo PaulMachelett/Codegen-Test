@@ -72,12 +72,13 @@ class TestFlaskBackendIntegration:
         note.id = 1
         note.title = 'Test Note'
         note.content = 'Test content'
-        note.owner_id = 1
+        # Mise à jour pour utiliser user_id au lieu d'owner_id
+        note.user_id = 1
         note.to_dict.return_value = {
             'id': 1,
             'title': 'Test Note',
             'content': 'Test content',
-            'owner_id': 1,
+            'user_id': 1,
             'created_at': '2024-01-01T00:00:00',
             'updated_at': '2024-01-01T00:00:00'
         }
@@ -194,7 +195,7 @@ class TestFlaskBackendIntegration:
         with patch.object(UserService, 'authenticate_user', return_value=mock_user), \
              patch.object(SessionService, 'create_session', return_value='test-token-123'):
             
-            response = client.post('/login', 
+            response = client.post('/userlogin', 
                 json={
                     'email': 'test@example.com',
                     'password': 'password123'
@@ -210,7 +211,7 @@ class TestFlaskBackendIntegration:
     def test_login_invalid_credentials(self, client):
         """Test: Login mit ungültigen Anmeldedaten"""
         with patch.object(UserService, 'authenticate_user', return_value=None):
-            response = client.post('/login', 
+            response = client.post('/userlogin', 
                 json={
                     'email': 'test@example.com',
                     'password': 'wrongpassword'
@@ -222,7 +223,7 @@ class TestFlaskBackendIntegration:
     
     def test_login_missing_fields(self, client):
         """Test: Login mit fehlenden Feldern"""
-        response = client.post('/login', 
+        response = client.post('/userlogin', 
             json={
                 'email': 'test@example.com'
                 # password fehlt
@@ -234,7 +235,7 @@ class TestFlaskBackendIntegration:
     
     def test_login_no_json(self, client):
         """Test: Login ohne JSON-Daten"""
-        response = client.post('/login')
+        response = client.post('/userlogin')
         
         # Flask gibt 500 zurück wenn request.get_json() fehlschlägt
         assert response.status_code == 500
@@ -361,8 +362,9 @@ class TestFlaskBackendIntegration:
     def test_get_notes_success(self, client, auth_headers, mock_user, mock_note):
         """Test: Erfolgreicher Abruf aller eigenen Notizen"""
         notes = [mock_note]
+        # Mise à jour pour utiliser get_notes_by_user au lieu de get_notes_by_owner
         with patch.object(SessionService, 'get_user_from_session', return_value=mock_user), \
-             patch.object(NoteService, 'get_notes_by_owner', return_value=notes):
+             patch.object(NoteService, 'get_notes_by_user', return_value=notes):
             
             response = client.get('/notes', headers=auth_headers)
             
@@ -375,8 +377,9 @@ class TestFlaskBackendIntegration:
     
     def test_get_notes_empty(self, client, auth_headers, mock_user):
         """Test: Abruf von Notizen wenn keine vorhanden"""
+        # Mise à jour pour utiliser get_notes_by_user au lieu de get_notes_by_owner
         with patch.object(SessionService, 'get_user_from_session', return_value=mock_user), \
-             patch.object(NoteService, 'get_notes_by_owner', return_value=[]):
+             patch.object(NoteService, 'get_notes_by_user', return_value=[]):
             
             response = client.get('/notes', headers=auth_headers)
             
@@ -430,7 +433,8 @@ class TestFlaskBackendIntegration:
     
     def test_get_single_note_access_denied(self, client, auth_headers, mock_user, mock_note):
         """Test: Abruf einer fremden Notiz (Zugriff verweigert)"""
-        mock_note.owner_id = 999  # Andere User-ID
+        # Mise à jour pour utiliser user_id au lieu d'owner_id
+        mock_note.user_id = 999  # Andere User-ID
         with patch.object(SessionService, 'get_user_from_session', return_value=mock_user), \
              patch.object(NoteService, 'get_note_by_id', return_value=mock_note):
             
@@ -586,8 +590,9 @@ class TestFlaskBackendIntegration:
         """Test: Bearer Token Format wird korrekt verarbeitet"""
         bearer_headers = {'Authorization': 'Bearer test-token-123'}
         
+        # Mise à jour pour utiliser get_notes_by_user au lieu de get_notes_by_owner
         with patch.object(SessionService, 'get_user_from_session', return_value=mock_user), \
-             patch.object(NoteService, 'get_notes_by_owner', return_value=[mock_note]):
+             patch.object(NoteService, 'get_notes_by_user', return_value=[mock_note]):
             
             response = client.get('/notes', headers=bearer_headers)
             
