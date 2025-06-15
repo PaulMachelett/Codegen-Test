@@ -1,24 +1,24 @@
 """
-Flask Web-Backend mit Benutzer- und Notizen-Verwaltung
+Flask Web-Backend mit SQLAlchemy-Integration und Mock-Datenbank
 """
 from flask import Flask, request, jsonify
-from werkzeug.security import generate_password_hash
 import re
 
-# Lokale Imports
-from models import (
-    create_user, get_user_by_email, get_user_by_name, get_user_by_id,
-    delete_user, get_all_users,
-    create_note, get_note_by_id, get_notes_by_owner,
-    update_note, delete_note
-)
-from auth import (
-    authenticate_user, create_session, invalidate_session,
-    require_auth, require_admin, get_current_user
-)
+# SQLAlchemy und Service-Imports
+from database import db
+from services import UserService, NoteService, SessionService
+from auth import require_auth, require_admin, get_current_user
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///notes_app.db'  # Würde echte DB verwenden
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# SQLAlchemy initialisieren (Mock-Modus)
+db.init_app(app)
+
+print("🗄️ SQLAlchemy-Mock-Datenbank initialisiert")
+print("📊 Simuliert echte SQLite-Datenbankoperationen")
 
 # Hilfsfunktionen für Validierung
 def validate_email(email):
@@ -66,18 +66,17 @@ def register():
             return jsonify({'error': 'Passwort muss mindestens 6 Zeichen lang sein'}), 400
         
         # Eindeutigkeit prüfen
-        if get_user_by_email(email):
+        if UserService.get_user_by_email(email):
             return jsonify({'error': 'E-Mail bereits registriert'}), 409
         
-        if get_user_by_name(name):
+        if UserService.get_user_by_name(name):
             return jsonify({'error': 'Benutzername bereits vergeben'}), 409
         
         # Benutzer erstellen
-        password_hash = generate_password_hash(password)
-        user = create_user(name, email, password_hash)
+        user = UserService.create_user(name, email, password)
         
         # Antwort ohne Passwort-Hash
-        user_response = {k: v for k, v in user.items() if k != 'password_hash'}
+        user_response = user.to_dict()
         
         return jsonify({
             'message': 'Benutzer erfolgreich registriert',
@@ -102,15 +101,15 @@ def login():
             return jsonify({'error': 'E-Mail und Passwort erforderlich'}), 400
         
         # Benutzer authentifizieren
-        user = authenticate_user(email, password)
+        user = UserService.authenticate_user(email, password)
         if not user:
             return jsonify({'error': 'Ungültige Anmeldedaten'}), 401
         
         # Session erstellen
-        token = create_session(user['id'])
+        token = SessionService.create_session(user.id)
         
         # Antwort ohne Passwort-Hash
-        user_response = {k: v for k, v in user.items() if k != 'password_hash'}
+        user_response = user.to_dict()
         
         return jsonify({
             'message': 'Erfolgreich angemeldet',
@@ -130,7 +129,7 @@ def logout():
         if token and token.startswith('Bearer '):
             token = token[7:]
         
-        if token and invalidate_session(token):
+        if token and SessionService.invalidate_session(token):
             return jsonify({'message': 'Erfolgreich abgemeldet'}), 200
         else:
             return jsonify({'error': 'Fehler beim Abmelden'}), 400
@@ -145,8 +144,9 @@ def get_notes():
     """Alle eigenen Notizen abrufen"""
     try:
         user = get_current_user()
-        notes = get_notes_by_owner(user['id'])
-        return jsonify({'notes': notes}), 200
+        notes = NoteService.get_notes_by_owner(user.id)
+        notes_data = [note.to_dict() for note in notes]
+        return jsonify({'notes': notes_data}), 200
         
     except Exception as e:
         return jsonify({'error': 'Fehler beim Abrufen der Notizen'}), 500
@@ -170,11 +170,11 @@ def create_note_endpoint():
             return jsonify({'error': 'Inhalt ist erforderlich'}), 400
         
         user = get_current_user()
-        note = create_note(title, content, user['id'])
+        note = NoteService.create_note(title, content, user.id)
         
         return jsonify({
             'message': 'Notiz erfolgreich erstellt',
-            'note': note
+            'note': note.to_dict()
         }), 201
         
     except Exception as e:
@@ -185,15 +185,15 @@ def create_note_endpoint():
 def get_note(note_id):
     """Einzelne Notiz abrufen"""
     try:
-        note = get_note_by_id(note_id)
+        note = NoteService.get_note_by_id(note_id)
         if not note:
             return jsonify({'error': 'Notiz nicht gefunden'}), 404
         
         user = get_current_user()
-        if note['owner_id'] != user['id']:
+        if note.owner_id != user.id:
             return jsonify({'error': 'Zugriff verweigert'}), 403
         
-        return jsonify({'note': note}), 200
+        return jsonify({'note': note.to_dict()}), 200
         
     except Exception as e:
         return jsonify({'error': 'Fehler beim Abrufen der Notiz'}), 500
@@ -203,12 +203,12 @@ def get_note(note_id):
 def update_note_endpoint(note_id):
     """Notiz bearbeiten"""
     try:
-        note = get_note_by_id(note_id)
+        note = NoteService.get_note_by_id(note_id)
         if not note:
             return jsonify({'error': 'Notiz nicht gefunden'}), 404
         
         user = get_current_user()
-        if note['owner_id'] != user['id']:
+        if note.owner_id != user.id:
             return jsonify({'error': 'Zugriff verweigert'}), 403
         
         data = request.get_json()
@@ -229,11 +229,11 @@ def update_note_endpoint(note_id):
         if content is not None and not content:
             return jsonify({'error': 'Inhalt darf nicht leer sein'}), 400
         
-        updated_note = update_note(note_id, title, content)
+        updated_note = NoteService.update_note(note_id, title, content)
         
         return jsonify({
             'message': 'Notiz erfolgreich aktualisiert',
-            'note': updated_note
+            'note': updated_note.to_dict()
         }), 200
         
     except Exception as e:
@@ -244,15 +244,15 @@ def update_note_endpoint(note_id):
 def delete_note_endpoint(note_id):
     """Notiz löschen"""
     try:
-        note = get_note_by_id(note_id)
+        note = NoteService.get_note_by_id(note_id)
         if not note:
             return jsonify({'error': 'Notiz nicht gefunden'}), 404
         
         user = get_current_user()
-        if note['owner_id'] != user['id']:
+        if note.owner_id != user.id:
             return jsonify({'error': 'Zugriff verweigert'}), 403
         
-        if delete_note(note_id):
+        if NoteService.delete_note(note_id):
             return jsonify({'message': 'Notiz erfolgreich gelöscht'}), 200
         else:
             return jsonify({'error': 'Fehler beim Löschen der Notiz'}), 500
@@ -266,8 +266,9 @@ def delete_note_endpoint(note_id):
 def get_users():
     """Alle Benutzer auflisten (nur Admin)"""
     try:
-        users = get_all_users()
-        return jsonify({'users': users}), 200
+        users = UserService.get_all_users()
+        users_data = [user.to_dict() for user in users]
+        return jsonify({'users': users_data}), 200
         
     except Exception as e:
         return jsonify({'error': 'Fehler beim Abrufen der Benutzer'}), 500
@@ -277,15 +278,15 @@ def get_users():
 def delete_user_endpoint(user_id):
     """Benutzer löschen (nur Admin)"""
     try:
-        user = get_user_by_id(user_id)
+        user = UserService.get_user_by_id(user_id)
         if not user:
             return jsonify({'error': 'Benutzer nicht gefunden'}), 404
         
         current_user = get_current_user()
-        if user_id == current_user['id']:
+        if user_id == current_user.id:
             return jsonify({'error': 'Admin kann sich nicht selbst löschen'}), 400
         
-        if delete_user(user_id):
+        if UserService.delete_user(user_id):
             return jsonify({'message': 'Benutzer erfolgreich gelöscht'}), 200
         else:
             return jsonify({'error': 'Fehler beim Löschen des Benutzers'}), 500
@@ -313,7 +314,7 @@ def get_current_user_info():
     """Aktuelle Benutzerinformationen abrufen"""
     try:
         user = get_current_user()
-        user_response = {k: v for k, v in user.items() if k != 'password_hash'}
+        user_response = user.to_dict()
         return jsonify({'user': user_response}), 200
         
     except Exception as e:
@@ -325,7 +326,6 @@ if __name__ == '__main__':
     print("   Admin: admin@example.com / admin123")
     print("   User1: john@example.com / password123")
     print("   User2: jane@example.com / mypassword")
-    print("🌐 Server läuft auf: http://localhost:5000")
+    print("🌐 Server läuft auf: http://localhost:5001")
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
-
+    app.run(debug=False, host='0.0.0.0', port=5001)

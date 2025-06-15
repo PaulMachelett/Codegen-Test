@@ -1,0 +1,12 @@
+🗄️ SQLAlchemy-Mock-Datenbank initialisiert
+📊 Simuliert echte SQLite-Datenbankoperationen
+🚀 Flask Web-Backend wird gestartet...
+📋 Verfügbare Dummy-Benutzer:
+   Admin: admin@example.com / admin123
+   User1: john@example.com / password123
+   User2: jane@example.com / mypassword
+🌐 Server läuft auf: http://localhost:5000
+ * Serving Flask app 'app'
+ * Debug mode: on
+Address already in use
+Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.
